@@ -1,0 +1,94 @@
+#!/bin/bash
+
+numTests=0
+numAsserts=0
+failedAsserts=0
+
+function doTest {
+	current_test=$1
+	error="no"
+	$1
+	countTest
+}
+
+function printGreen {
+	echo -e '\E[37;42m'"\033[1m$1\033[0m";
+	tput sgr0
+}
+
+function printRed {
+	echo -e '\E[37;41m'"\033[1m$1\033[0m";
+	tput sgr0
+}
+
+function printError {
+	printRed "$1"
+	error="yes"
+	failedAsserts=`expr $failedAsserts + 1`
+}
+
+function printPass {
+	printGreen "$current_test passes"
+}
+
+function countTest {
+	numTests=`expr $numTests + 1`
+}
+
+function countAssert {
+	numAsserts=`expr $numAsserts + 1`
+}
+
+function assertEquals {
+	countAssert
+	if [ "$1" != "$2" ]
+	then
+		printError "$current_test: expected '$1' but found '$2'";
+	fi
+}
+
+function assertGreaterThan {
+	countAssert
+	if [ "$1" -ge "$2" ]
+	then
+		printError "$current_test: expect '$2' to be greater than '$1'"
+	fi
+}
+
+function assertMatches {
+	countAssert
+	if [[ ! "$2" =~ $1 ]]
+	then
+		printError "$current_test: expect '$2' to match regular expression '$1'"
+	fi
+}
+
+function testFile {
+	. $1
+	while read testFunction
+	do
+		setUp
+		doTest $testFunction
+		if [ "$error" = "no" ]
+		then
+			printPass
+		fi
+	done < <(grep 'function test' $1 | awk '{ print $2 }')
+}
+
+function printResults {
+	echo
+	if [ $failedAsserts = 0 ]
+	then
+		printGreen "OK ($numTests tests, $numAsserts assertions)"
+	else
+		printRed "FAILURES!"
+		printRed "Tests: $numTests, Assertions: $numAsserts, Failures: $failedAsserts."
+	fi
+}
+
+if [[ $# = "1" ]]
+then
+	testFile $1
+	printResults
+fi
