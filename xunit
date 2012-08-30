@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. xunit.d/colors.sh
+
 numTests=0
 numAsserts=0
 failedAsserts=0
@@ -11,24 +13,14 @@ function doTest {
 	countTest
 }
 
-function printGreen {
-	echo -e '\E[37;42m'"\033[1m$1\033[0m";
-	tput sgr0
-}
-
-function printRed {
-	echo -e '\E[37;41m'"\033[1m$1\033[0m";
-	tput sgr0
-}
-
 function printError {
-	printRed "$1"
+	printColorized red "$1"
 	error="yes"
 	failedAsserts=`expr $failedAsserts + 1`
 }
 
 function printPass {
-	printGreen "$current_test passes"
+	printColorized green "$current_test passes"
 }
 
 function countTest {
@@ -80,10 +72,10 @@ function printResults {
 	echo
 	if [ $failedAsserts = 0 ]
 	then
-		printGreen "OK ($numTests tests, $numAsserts assertions)"
+		printColorized green "OK ($numTests tests, $numAsserts assertions)"
 	else
-		printRed "FAILURES!"
-		printRed "Tests: $numTests, Assertions: $numAsserts, Failures: $failedAsserts."
+		printColorized red "FAILURES!"
+		printColorized red "Tests: $numTests, Assertions: $numAsserts, Failures: $failedAsserts."
 	fi
 }
 
