@@ -1,86 +1,24 @@
 #!/bin/bash
 
 . xunit.d/colors.sh
-
-numTests=0
-numAsserts=0
-failedAsserts=0
-
-function doTest {
-	current_test=$1
-	error="no"
-	$1
-	countTest
-}
-
-function printError {
-	printColorized red "$1"
-	error="yes"
-	failedAsserts=`expr $failedAsserts + 1`
-}
-
-function printPass {
-	printColorized green "$current_test passes"
-}
-
-function countTest {
-	numTests=`expr $numTests + 1`
-}
-
-function countAssert {
-	numAsserts=`expr $numAsserts + 1`
-}
-
-function assertEquals {
-	countAssert
-	if [ "$1" != "$2" ]
-	then
-		printError "$current_test: expected '$1' but found '$2'";
-	fi
-}
-
-function assertGreaterThan {
-	countAssert
-	if [ "$1" -ge "$2" ]
-	then
-		printError "$current_test: expect '$2' to be greater than '$1'"
-	fi
-}
-
-function assertMatches {
-	countAssert
-	if [[ ! "$2" =~ $1 ]]
-	then
-		printError "$current_test: expect '$2' to match regular expression '$1'"
-	fi
-}
-
-function testFile {
-	. $1
-	while read testFunction
-	do
-		setUp
-		doTest $testFunction
-		if [ "$error" = "no" ]
-		then
-			printPass
-		fi
-	done < <(grep 'function test' $1 | awk '{ print $2 }')
-}
-
-function printResults {
-	echo
-	if [ $failedAsserts = 0 ]
-	then
-		printColorized green "OK ($numTests tests, $numAsserts assertions)"
-	else
-		printColorized red "FAILURES!"
-		printColorized red "Tests: $numTests, Assertions: $numAsserts, Failures: $failedAsserts."
-	fi
-}
+. xunit.d/basic-asserts.sh
+. xunit.d/assertions.sh
+. xunit.d/tests.sh
+. xunit.d/test-file.sh
+. xunit.d/test-dir.sh
 
 if [[ $# = "1" ]]
 then
-	testFile $1
-	printResults
+	if [ -f $1 ]
+	then
+		testFile $1
+		printResults
+	else
+		if [ -d $1 ]
+		then
+			testDir $1
+		else
+			printColorized red "No tests found"
+		fi
+	fi
 fi

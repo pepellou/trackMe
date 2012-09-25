@@ -5,7 +5,7 @@ function green {
 }
 
 function red {
-	echo "37;42"
+	echo "37;41"
 }
 
 function printColorized {
